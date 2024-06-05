@@ -1,7 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
+from flask import Flask, jsonify
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -9,6 +10,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///ecommerce_chain.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Product(db.Model):
     __tablename__ = 'product'
@@ -37,7 +41,17 @@ class Order(db.Model):
         return f'<Order {self.id}>'
 
 def init_db():
-    db.create_all()
+    try:
+        db.create_all()
+        logger.info("Database initialized")
+    except Exception as e:
+        logger.error("An error occurred during the database initialization: %s", e)
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error("Unhandled exception occurred: %s", e)
+    return jsonify(error=str(e)), 500
 
 if __name__ == '__main__':
     init_db()
+    app.run(debug=True)
