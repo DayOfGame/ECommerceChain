@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import os
 from dotenv import load_dotenv
 import logging
@@ -46,6 +46,32 @@ def init_db():
         logger.info("Database initialized")
     except Exception as e:
         logger.error("An error occurred during the database initialization: %s", e)
+
+@app.route('/create_product', methods=['POST'])
+def create_product():
+    try:
+        data = request.json
+        new_product = Product(name=data['name'], description=data.get('description'), price=data['price'], stock=data['stock'])
+        db.session.add(new_product)
+        db.session.commit()
+        return jsonify({'message': 'Product created successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Failed to create product: %s", e)
+        return jsonify({'error': 'Failed to create product'}), 500
+
+@app.route('/create_order', methods=['POST'])
+def create_order():
+    try:
+        data = request.json
+        new_order = Order(product_id=data['product_id'], quantity=data['quantity'], delivery_address=data['delivery_address'], status=data['status'])
+        db.session.add(new_order)
+        db.session.commit()
+        return jsonify({'message': 'Order placed successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Failed to place order: %s", e)
+        return jsonify({'error': 'Failed to place order'}), 500
 
 @app.errorhandler(Exception)
 def handle_exception(e):
