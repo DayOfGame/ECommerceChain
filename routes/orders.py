@@ -20,8 +20,12 @@ class OrderStatus(Resource):
         return {"order_id": order_id, "status": "Processing"}, 200
 
 api.add_resource(OrderPlacement, '/order')
-api.add_resource(OrderUpdate, '/order/<order_id>')
-api.add_resource(OrderStatus, '/order/status/<order_id>')
+api.add_resource(OrderUpdate, '/order/<string:order_id>')
+api.add_resource(OrderStatus, '/order/status/<string:order_id>')
 
 if __name__ == '__main__':
-    app.run(debug=os.environ.get('DEBUG', 'False').lower() in ('true', '1', 't'), host=os.environ.get('HOST', '0.0.0.0'), port=int(os.environ.get('PORT', 5000)))
+    debug_mode = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
+    host_address = os.getenv('HOST', '0.0.0.0')
+    port_number = int(os.getenv('PORT', 5000))
+
+    app.run(debug=debug_mode, host=host_address, port=port_number)
