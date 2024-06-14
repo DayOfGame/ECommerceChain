@@ -10,11 +10,21 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const App: React.FC = () => {
   const [products, setProducts] = useState([]);
+
   useEffect(() => {
-    fetch(`${API_URL}/products`)
-      .then(response => response.json())
-      .then(data => setProducts(data))
-      .catch(error => console.error("Fetching products failed", error));
+    const cachedProducts = localStorage.getItem('products');
+
+    if (cachedProducts) {
+      setProducts(JSON.parse(cachedProducts));
+    } else {
+      fetch(`${API_URL}/products`)
+        .then(response => response.json())
+        .then(data => {
+          setProducts(data);
+          localStorage.setItem('products', JSON.stringify(data));
+        })
+        .catch(error => console.error("Fetching products failed", error));
+    }
   }, []);
 
   return (
@@ -24,7 +34,7 @@ const App: React.FC = () => {
         <nav>
         </nav>
         <Switch>
-          <Route exact path="/" render={() => <Product (products={products} />} />
+          <Route exact path="/" render={(props) => <ProductList {...props} products={products} />} />
           <Route path="/product/:id" component={ProductDetails} />
           <Route path="/cart" component={ShoppingCart} />
           <Route path="/checkout" component={Checkout} />
