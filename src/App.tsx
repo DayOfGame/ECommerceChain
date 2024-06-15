@@ -10,11 +10,19 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const App: React.FC = () => {
   const [products, setProducts] = useState([]);
+  const cacheDuration = 3600000; // Cache duration in milliseconds (e.g., 3600000ms = 1 hour)
 
   useEffect(() => {
-    const cachedProducts = localStorage.getItem('products');
+    // Function to check if the cache is valid
+    const isCacheValid = (cacheTimestamp: number) => {
+      const now = new Date().getTime();
+      return (now - cacheTimestamp) < cacheDuration;
+    };
 
-    if (cachedProducts) {
+    const cachedProducts = localStorage.getItem('products');
+    const cacheTimestamp = localStorage.getItem('products_timestamp');
+
+    if (cachedProducts && cacheTimestamp && isCacheValid(parseInt(cacheTimestamp))) {
       setProducts(JSON.parse(cachedProducts));
     } else {
       fetch(`${API_URL}/products`)
@@ -22,6 +30,7 @@ const App: React.FC = () => {
         .then(data => {
           setProducts(data);
           localStorage.setItem('products', JSON.stringify(data));
+          localStorage.setItem('products_timestamp', new Date().getTime().toString());
         })
         .catch(error => console.error("Fetching products failed", error));
     }
