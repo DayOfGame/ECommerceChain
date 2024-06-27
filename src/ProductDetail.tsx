@@ -15,15 +15,25 @@ interface ProductDetailProps {
   productId: string;
 }
 
+const productCache: { [key: string]: ProductDetails } = {};
+
 const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const fetchProductDetail = async () => {
+    const cachedProduct = productCache[productId];
+
+    if (cachedProduct) {
+      setProduct(cachedProduct);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axios.get(`${API_URL}/products/${productId}`);
       setProduct(response.data);
+      productCache[productId] = response.data; // Cache the fetched product
     } catch (error) {
       console.error("Error fetching product details:", error);
     } finally {
@@ -32,8 +42,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   };
 
   useEffect(() => {
-    fetchProductDetail();
+    fetchProductAPIWithCache();
   }, [productId]);
+
+  const fetchProductAPIWithCache = () => {
+    if (!productCache[productId]) {
+      fetchProductDetail();
+    } else {
+      setProduct(productConnect[productId]);
+    }
+  };
 
   const handleAddToCart = () => {
     console.log("Product added to cart:", product?.id);
