@@ -21,35 +21,27 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchProductDetail = async () => {
-    const cachedProduct = productCache[productId];
+  useEffect(() => {
+    fetchProduct();
+  }, [productId]);
 
-    if (cachedProduct) {
-      setProduct(cachedProduct);
+  const fetchProduct = async () => {
+    if (productCache[productId]) {
+      setProduct(productCache[productId]);
       return;
     }
 
     setLoading(true);
+
     try {
       const response = await axios.get(`${API_URL}/products/${productId}`);
-      setProduct(response.data);
-      productCache[productId] = response.data; // Cache the fetched product
+      const productDetail = response.data;
+      productCache[productId] = productDetail;
+      setProduct(productDetail);
     } catch (error) {
       console.error("Error fetching product details:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProductAPIWithCache();
-  }, [productId]);
-
-  const fetchProductAPIWithCache = () => {
-    if (!productCache[productId]) {
-      fetchProductDetail();
-    } else {
-      setProduct(productConnect[productId]);
     }
   };
 
@@ -71,4 +63,4 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   );
 };
 
-export default ProductDetail;
+export default Product.detail;
