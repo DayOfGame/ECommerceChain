@@ -27,7 +27,7 @@ const CheckoutForm: React.FC = () => {
     country: '',
   });
 
-  const [payment, setPayment] = useState<Payment>({
+  const [payment, setPayment] = useState<E>({
     cardNumber: '',
     expiryMonth: '',
     expiryYear: '',
@@ -37,23 +37,18 @@ const CheckoutForm: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'address' | 'payment') => {
     const { name, value } = e.target;
     if (type === 'address') {
-      setAddress({ ...address, [name]: value });
+      setAddress(prev => ({ ...prev, [name]: value }));
     } else {
-      setPayment({ ...payment, [name]: value });
+      setPayment(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const orderData = {
-        address,
-        payment,
-      };
+      const orderData = { address, payment };
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/orders`, orderData);
-      
       console.log('Order Success:', response.data);
-
     } catch (error) {
       console.error('Order Error:', error);
     }
@@ -67,11 +62,12 @@ const CheckoutForm: React.FC = () => {
       <input type="text" name="city" placeholder="City" value={address.city} onChange={(e) => handleChange(e, 'address')} />
       <input type="text" name="postalCode" placeholder="Postal Code" value={address.postalCode} onChange={(e) => handleChange(e, 'address')} />
       <input type="text" name="country" placeholder="Country" value={address.country} onChange={(e) => handleChange(e, 'address')} />
-      <input type="text" name="cardNumber" placeholder="Card Number" value={payment.cardNote']} />
+      
+      <input type="text" name="cardNumber" placeholder="Card Number" value={payment.cardNumber} onChange={(e) => handleChange(e, 'payment')} />
       <input type="text" name="expiryMonth" placeholder="Expiry Month" value={payment.expiryMonth} onChange={(e) => handleChange(e, 'payment')} />
       <input type="text" name="expiryYear" placeholder="Expiry Year" value={payment.expiryYear} onChange={(e) => handleChange(e, 'payment')} />
       <input type="text" name="cvv" placeholder="CVV" value={payment.cvv} onChange={(e) => handleChange(e, 'payment')} />
-      
+
       <button type="submit">Submit Order</button>
     </form>
   );
