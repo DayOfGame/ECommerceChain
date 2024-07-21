@@ -28,6 +28,8 @@ contract ECommerceChain {
     event ProductAdded(uint productId, string name, uint price);
     event OrderPlaced(uint orderId, uint productId, address buyer);
     event OrderConfirmed(uint orderId, address seller);
+    event OrderShipped(uint orderId);
+    event OrderReceived(uint orderId);
     event OrderDetails(uint orderId, uint productId, OrderStatus status);
 
     constructor() {
@@ -61,11 +63,41 @@ contract ECommerceChain {
         emit OrderConfirmed(orderId, msg.sender);
     }
 
+    function shipOrder(uint orderId) public {
+        require(orders[orderId].status == OrderStatus.Confirmed, "Order cannot be shipped in current state");
+        require(products[orders[orderId].productId].seller == msg.sender, "Only the seller can ship the order");
+
+        orders[orderId].status = OrderStatus.Shipped;
+        emit OrderShipped(orderId);
+    }
+
+    function receiveOrder(uint orderId) public {
+        require(orders[orderId].status == OrderStatus.Shipped, "Order cannot be received in current
+state");
+        require(orders[orderId].buyer == msg.sender, "Only the buyer can confirm order receipt");
+
+        orders[orderId].status = OrderStatus.Received;
+        emit OrderReceived(orderId);
+    }
+
     function getOrderDetails(uint orderId) public view returns (uint, uint, OrderStatus) {
-        require(orders[orderId].buyer == msg.sender || products[orders[orderId].productId].seller == msg.sender, "You are not authorized to view this order");
+        require(orders[orderId].buyer == msg.sender || products[orders[orderId].productId].seller ==
+msg.sender, "You are not authorized to view this order");
         
         Order memory order = orders[orderId];
-        emit OrderDetails(orderId, order.productId, order.status);
         return (order.id, order.productId, order.status);
+    }
+
+    function withdrawFunds() public {
+        uint amount = 0;
+        for (uint i = 0; i < nextOrderId; i++) {
+            if (products[orders[i].productId].seller == msg.sender && orders[i].status == OrderStatus.Received) {
+                amount += products[orders[i].productId].price;
+                orders[i].status = OrderStatus.Placed;
+            }
+        }
+
+        require(amount > 0, "No funds to withdraw");
+        payable(msg.sender).transfer(amount);
     }
 }
