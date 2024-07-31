@@ -1,14 +1,16 @@
 const path = require('path');
-const fs = require('fs');
-const solc = require('solc');
+const fileSystem = require('fs');
+const solidityCompiler = require('solc');
 require('dotenv').config();
-const contractPath = path.resolve(__dirname, 'contracts', 'ECommerceChain.sol');
-const source = fs.readFileSync(contractPath, 'utf8');
-const input = {
+
+const smartContractFilePath = path.resolve(__dirname, 'contracts', 'ECommerceChain.sol');
+const smartContractSourceCode = fileSystem.readFileSync(smartContractFilePath, 'utf8');
+
+const compilerInput = {
   language: 'Solidity',
   sources: {
     'ECommerceChain.sol': {
-      content: source,
+      content: smartContractSourceCode,
     },
   },
   settings: {
@@ -19,12 +21,17 @@ const input = {
     },
   },
 };
-const output = JSON.parse(solc.compile(JSON.stringify(input))).contracts['ECommerceChain.sol'];
-const contractName = process.env.CONTRACT_NAME;
-const { abi, evm } = output[contractName];
-const contractData = {
-  abi: abi,
-  bytecode: evm.bytecode.object,
+
+const compilerOutput = JSON.parse(solidityCompiler.compile(JSON.stringify(compilerInput))).contracts['ECommerceChain.sol'];
+const smartContractName = process.env.CONTRACT_NAME;
+
+// Extracting ABI and Bytecode for the specified contract
+const { abi: contractABI, evm: contractEVM } = compilerOutput[smartContractName];
+
+const smartContractData = {
+  abi: contractABI,
+  bytecode: contractEVM.bytecode.object,
 };
-const outputPath = path.resolve(__dirname, 'build', `${contractName}.json`);
-fs.writeFileSync(outputPath, JSON.stringify(contractData), 'utf8');
+
+const outputFilePath = path.resolve(__dirname, 'build', `${smartContractName}.json`);
+fileSystem.writeFileSync(outputFilePath, JSON.stringify(smartContractData), 'utf8');
